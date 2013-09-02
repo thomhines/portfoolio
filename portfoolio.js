@@ -4,7 +4,7 @@
 jQuery(document).ready(function($){
 	console.log('normal script');
  
-	$('.media_rows').sortable({
+	$('.portfoolio_media_rows').sortable({
 		refreshPositions: true,
 		opacity: 0.6,
 		scroll: true,
@@ -54,6 +54,7 @@ jQuery(document).ready(function($){
  
 	$('#add_new_video').click(function() {
 		video_url = $('#video_url').val();
+		console.log(video_url);
 		var video_type;
 		// CHECK FOR VIMEO ID
 		video_id = video_url.match(/^.+vimeo.com\/(.*\/)?([^#\?]*)/);
@@ -119,7 +120,7 @@ jQuery(document).ready(function($){
 	
 	function updateMediaList() {
 		var new_items;
-		$('.media_row').each(function() {
+		$('.portfoolio_media_row').each(function() {
 			if(!new_items) new_items = $(this).data('media-value');
 			else new_items += ', ' + $(this).data('media-value');
 		});
@@ -134,8 +135,8 @@ jQuery(document).ready(function($){
 		else media_items.val(item);
 		
 		// ADD NEW ROW AND THUMBNAIL
-		var new_row = $(".media_row").first().clone(true, true);
-		new_row.attr('data-media-value', item).css('display', 'none').appendTo($(".portfoolio_media .media_rows"));
+		var new_row = $(".portfoolio_media_row").first().clone(true, true);
+		new_row.attr('data-media-value', item).css('display', 'none').appendTo($(".portfoolio_media .portfoolio_media_rows"));
 		new_row.find('img').attr('src', thumbnail);
 		new_row.find('a').attr('href', link);
 		if(link.indexOf('vimeo') == -1 && link.indexOf('youtube') == -1) {

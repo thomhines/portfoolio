@@ -54,7 +54,7 @@
 }
 
 
-.media_row.blank {
+.portfoolio_media_row.blank {
 	display: none;
 }
 
@@ -66,10 +66,4 @@
 .column-thumbnail_column img {
 	width: 75px;
 	height: auto;
-}
-
-
-
-.portfolio_slideshow {
-	overflow: hidden;
 }

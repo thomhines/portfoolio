@@ -3,14 +3,10 @@
 	width: 620px;
 	height: 500px;
 	text-align: center;
+	overflow: hidden;
 }
 
 .portfoolio_slideshow {
-/*
-	-webkit-box-shadow: 0px 0px 4px 3px rgba(0, 0, 0, .06);
-	-moz-box-shadow: 0px 0px 4px 3px rgba(0, 0, 0, .06);
-	box-shadow: 0px 0px 4px 3px rgba(0, 0, 0, .06);
-*/
 	border: 1px dotted rgba(200,200,200,.5);
 }
 
@@ -33,9 +29,9 @@
 	margin: 0;
 	cursor: pointer;
 	opacity: 0;
-	-moz-transition: all .1s ease-in; /* firefox */
-	-webkit-transition: all .1s ease-in; /* safari and chrome */
-	-o-transition: all .1s ease-in; /* opera */
+	-moz-transition: all .1s ease-in;
+	-webkit-transition: all .1s ease-in;
+	-o-transition: all .1s ease-in;
 	transition: all .1s ease-in;
 }
 
@@ -43,11 +39,11 @@
 	opacity: 1;
 }
 
-.portfoolio_slideshowcontrols .prev_image {
+.portfoolio_slideshowcontrols .portfoolio_prev_image {
 	float: left;
 }
 
-.portfoolio_slideshowcontrols .next_image {
+.portfoolio_slideshowcontrols .portfoolio_next_image {
 	float: right;
 	background-position:-30px 0;
 }
@@ -62,17 +58,13 @@
 	height: 100%;
 }
 
-.image {
-	text-align: center;
-}
-
-.imagecaption {
+.portfoolio_imagecaption {
 	float: left;
 	color: #aaa;
 	margin: 7px 0;
 	font-size: 12px;
 }
-.imagecount {
+.portfoolio_imagecount {
 	width: 640px;
 	text-align: right;
 	color: #666;
