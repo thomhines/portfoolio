@@ -123,7 +123,7 @@ function portfolio_icons() {
 // ADD CUSTOM META FIELDS TO POST TYPE
 add_action('add_meta_boxes', 'portfoolio_add_custom_fields');
 function portfoolio_add_custom_fields() {
-	add_meta_box('media_box', 'Images/Video', 'portfoolio_media_box_contents', 'work', 'normal', 'high');
+	add_meta_box('media_box', 'Image/Video/Media', 'portfoolio_media_box_contents', 'work', 'normal', 'high');
 }
 function portfoolio_media_box_contents() {
 	$type = '';
