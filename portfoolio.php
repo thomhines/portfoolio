@@ -54,7 +54,7 @@ function portfoolio_register_custom_post_type() {
 	$labels = array(
 		'name' => _x('Works', 'work'),
 		'singular_name' => _x('Work', 'work'),
-		'add_new' => _x('Add New', 'work'),
+		'add_new' => _x('Add New Work', 'work'),
 		'add_new_item' => _x('Add New Work', 'work'),
 		'edit_item' => _x('Edit Work', 'work'),
 		'new_item' => _x('New Work', 'work'),
@@ -63,7 +63,7 @@ function portfoolio_register_custom_post_type() {
 		'not_found' => _x('No works found', 'work'),
 		'not_found_in_trash' => _x('No works found in Trash', 'work'),
 		'parent_item_colon' => _x('Parent Work:', 'work'),
-		'menu_name' => _x('Artwork', 'work'),
+		'menu_name' => _x('Gallery', 'work'),
    );
 
 	$args = array(
@@ -134,7 +134,10 @@ function portfoolio_media_box_contents() {
 		<tr>
 			<th></th>
 			<th><?php _e('Thumbnail', 'portfoolio'); ?></th>
-			<th><!-- Caption --></th>
+			<th><!-- <?php _e('Caption', 'portfoolio'); ?>--></th>
+		</tr>
+		<tr>
+			<td colspan="3"><?php _e('Drag and Drop to Change Order', 'portfoolio'); ?></td>
 		</tr>
 	
 		<tbody class="portfoolio_media_rows">
@@ -144,7 +147,9 @@ function portfoolio_media_box_contents() {
 	foreach($items as $item) { ?>
 		<tr class="portfoolio_media_row <?php if(!$items[0]) { ?>blank<?php } ?>" data-media-value="<?php echo $item; ?>">
 			<td>
+				<span class="edit_media_item button"><?php _e('Edit', 'portfoolio'); ?></span>
 				<span class="remove_media_item button"><?php _e('Remove', 'portfoolio'); ?></span>
+				<span class="set_as_thumbnail button"><?php _e('Use as Thumbnail', 'portfoolio'); ?></span>
 			</td>
 			<td>
 				<?php portfoolio_get_item_thumbnail($item); ?>
@@ -185,6 +190,15 @@ function portfoolio_media_box_contents() {
 <?php
 }
 
+add_action('wp_ajax_portfoolio_set_thumbnail', 'portfoolio_set_thumbnail');
+function portfoolio_set_thumbnail() {
+	set_post_thumbnail($_POST['post_id'], $_POST['image_id']);
+	echo wp_get_attachment_image($_POST['image_id'], 'post-thumbnail');
+	die();
+}
+
+
+
 // SAVE META DATA ON WHEN POST IS PUBLISH/UPDATED
 add_action('save_post', 'portfoolio_save_postdata');
 function portfoolio_save_postdata($post_id) {
@@ -211,10 +225,80 @@ function portfoolio_works_columns($defaults){
 add_action('manage_work_posts_custom_column', 'portfoolio_works_column_data', 10, 2);
 function portfoolio_works_column_data($column_name, $id) {
 	if( $column_name == 'thumbnail_column' ) {
-		portfoolio_thumbnail($id);
+		?><a href="<?php echo get_edit_post_link($id); ?>"><?php portfoolio_thumbnail($id); ?></a><?php
 	}
 }
 
+
+
+
+
+// WHITELIST SETTINGS
+add_action('admin_init', 'portfoolio_settings_init' );
+function portfoolio_settings_init() {
+	register_setting( 'portfoolio_settings', 'portfoolio_settings_options', 'portfoolio_sanitize_settings' );
+}
+
+// ADD SETTINGS PAGE
+add_action('admin_menu', 'portfoolio_settings_page');
+function portfoolio_settings_page() {
+	add_options_page('Portfoolio Settings', 'Portfoolio', 'manage_options', 'portfoolio_settings', 'portfoolio_settings_do_page');
+}
+
+// Draw the menu page itself
+function portfoolio_settings_do_page() {
+	?>
+	<div class="wrap">
+		<div id="icon-options-general" class="icon32"></div>
+		<h2><?php _e('Portfoolio Settings', 'portfoolio'); ?></h2>
+		<form method="post" action="options.php">
+			<?php settings_fields('portfoolio_settings'); ?>
+			<?php $options = get_option('portfoolio_settings_options'); ?>
+			<table class="form-table">
+				<tr valign="top">
+					<th scope="row"><?php _e('Slideshow Size', 'portfoolio'); ?></th>
+					<td>
+						<?php _e('Width', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings_options[slideshow_width]" value="<?php echo $options['slideshow_width']; ?>" class="small-text" />px<br>
+						<?php _e('Height', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings_options[slideshow_height]" value="<?php echo $options['slideshow_height']; ?>" class="small-text" />px
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row"><?php _e('Slideshow Speed', 'portfoolio'); ?><br></th>
+					<td>
+						<input type="text" name="portfoolio_settings_options[slideshow_speed]" value="<?php echo $options['slideshow_speed']; ?>" class="small-text" /> seconds
+						<p class="description"><?php _e('The number of seconds a slide should be shown before transitioning to the next.', 'portfoolio'); ?></p>
+					</td>
+				</tr>
+				
+				<tr valign="top">
+					<th scope="row"><?php _e('Item Order', 'portfoolio'); ?><br><span></span></th>
+					<td>
+						<select name="portfoolio_settings_options[item_order]" value="<?php echo $options['item_order']; ?>">
+							<option value="count">List Order</option>
+							<option value="date">Date</option>
+						</select>
+						<p class="description"><?php _e('List Order is the order in which items appear in the Gallery Item list. To change the order, just drag and drop them into the order you would like them to appear.', 'portfoolio'); ?></p>
+					</td>
+				</tr>
+			</table>
+			<p class="submit">
+			<input type="submit" class="button-primary" value="<?php _e('Save Changes') ?>" />
+			</p>
+		</form>
+	</div>
+	<?php	
+}
+
+// Sanitize and validate input. Accepts an array, return a sanitized array.
+function portfoolio_sanitize_settings($input) {
+	// Our first value is either 0 or 1
+	$input['option1'] = ( $input['option1'] == 1 ? 1 : 0 );
+	
+	// Say our second option must be safe text with no HTML tags
+	$input['sometext'] =  wp_filter_nohtml_kses($input['sometext']);
+	
+	return $input;
+}
 
 
 /*----------------------------------------------------------------------*

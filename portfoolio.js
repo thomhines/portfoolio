@@ -2,8 +2,6 @@
 // http://www.webmaster-source.com/2013/02/06/using-the-wordpress-3-5-media-uploader-in-your-plugin-or-theme/
 
 jQuery(document).ready(function($){
-	console.log('normal script');
- 
 	$('.portfoolio_media_rows').sortable({
 		refreshPositions: true,
 		opacity: 0.6,
@@ -42,7 +40,6 @@ jQuery(document).ready(function($){
 		//When a file is selected, grab the URL and set it as the text field's value
 		custom_uploader.on('select', function() {
 			attachment = custom_uploader.state().get('selection').first().toJSON();
-			console.log(attachment);
 			addMediaItem(attachment.id, attachment.sizes.thumbnail.url, attachment.url);
 		});
  
@@ -54,11 +51,14 @@ jQuery(document).ready(function($){
  
 	$('#add_new_video').click(function() {
 		video_url = $('#video_url').val();
+		if(video_url.indexOf('://') == -1) video_url = 'http://'+video_url;
 		console.log(video_url);
 		var video_type;
 		// CHECK FOR VIMEO ID
-		video_id = video_url.match(/^.+vimeo.com\/(.*\/)?([^#\?]*)/);
+		video_id = video_url.match(/vimeo.com\/(.*\/)?([^#\?]*)/);
 		if(video_id) {
+			console.log(video_url);
+			
 			video_type = 'vimeo';
 			video_id = video_id[video_id.length-1];
 		}
@@ -66,8 +66,7 @@ jQuery(document).ready(function($){
 		// CHECK FOR YOUTUBE ID
 		if(!video_id) {
 			video_id = video_url.split('v=')[1];
-			console.log(video_id);
-			if(video_id) {
+			if(video_id && video_url.toLowerCase().indexOf('youtube') != -1) {
 				var ampersandPosition = video_id.indexOf('&');
 				if(ampersandPosition != -1) {
 				  video_id = video_id.substring(0, ampersandPosition);
@@ -77,14 +76,12 @@ jQuery(document).ready(function($){
 		}
 		// CHECK FOR SOUNDCLOUD ID
 		if(!video_id) {
-			video_id = video_url.match(/^.+soundcloud.com\/(.*\/)(.*)/);
-			if(!video_id) video_id = video_url.match(/^.+snd.sc\/(.*)/);
+			video_id = video_url.match(/^soundcloud.com\/(.*\/)(.*)/);
+			if(!video_id) video_id = video_url.match(/^snd.sc\/(.*)/);
 			video_type = 'soundcloud';
 			//video_id = video_id[video_id.length-1];
 		}
 		
-		console.log(video_id);
-
 		// NOT A VALID VIDEO
 		if(!video_id) {
 			alert('The video URL is not supported by Portfoolio.');
@@ -108,7 +105,6 @@ jQuery(document).ready(function($){
 	
 	
 	$('.remove_media_item').on('click', function() {
-		console.log('remove');
 		if(confirm('Are you sure you want to remove this item?')) {
 			var row = $(this).parent().parent();
 			row.fadeOut(500, function() {
@@ -116,6 +112,21 @@ jQuery(document).ready(function($){
 				updateMediaList();
 			});
 		}
+	});
+	
+	
+	$('.set_as_thumbnail').on('click', function() {
+		var post_id = $('#post_ID').val();
+		var image_id = $(this).parent().parent().data('media-value');
+		var data = {
+			action: 'portfoolio_set_thumbnail',
+			post_id: post_id,
+			image_id: image_id
+		};
+		$.post(ajaxurl, data, function(msg) {
+			$('#set-post-thumbnail').empty().html(msg)
+				.find('img').attr('width', 266).attr('height', 118);
+		});
 	});
 	
 	function updateMediaList() {
