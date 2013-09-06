@@ -155,6 +155,9 @@ jQuery(document).ready(function($){
 		} else {
 			new_row.find('a').attr('target', '_blank').removeClass('thickbox');;
 		}
+		
+		// REMOVE THUMBNAIL BUTTON ON NON-IMAGE ITEMS
+		if(isNaN(item)) new_row.find('.set_as_thumbnail').remove();
 			
 		// CLEAR ADD_MEDIA FIELDS
 		$('#video_url').val('');

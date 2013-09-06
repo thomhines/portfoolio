@@ -149,7 +149,9 @@ function portfoolio_media_box_contents() {
 			<td>
 				<span class="edit_media_item button"><?php _e('Edit', 'portfoolio'); ?></span>
 				<span class="remove_media_item button"><?php _e('Remove', 'portfoolio'); ?></span>
+				<?php if(is_numeric($item)) { ?>
 				<span class="set_as_thumbnail button"><?php _e('Use as Thumbnail', 'portfoolio'); ?></span>
+				<?php } ?>
 			</td>
 			<td>
 				<?php portfoolio_get_item_thumbnail($item); ?>
@@ -255,33 +257,51 @@ function portfoolio_settings_do_page() {
 			<?php settings_fields('portfoolio_settings'); ?>
 			<?php $options = get_option('portfoolio_settings_options'); ?>
 			<table class="form-table">
+				
+				<tr valign="top">
+					<th scope="row"><?php _e('Gallery Item Order', 'portfoolio'); ?><br><span></span></th>
+					<td>
+						<select name="portfoolio_settings_options[item_order]" value="<?php echo $options['item_order']; ?>">
+							<option value="count"><?php _e('List Order', 'portfoolio'); ?></option>
+							<option value="date"><?php _e('Date', 'portfoolio'); ?></option>
+						</select>
+						<p class="description"><?php _e('List Order is the order in which items appear in the Gallery Item list. To change the order, just drag and drop them into the order you would like them to appear.', 'portfoolio'); ?></p>
+					</td>
+				</tr>
+				
 				<tr valign="top">
 					<th scope="row"><?php _e('Slideshow Size', 'portfoolio'); ?></th>
 					<td>
-						<?php _e('Width', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings_options[slideshow_width]" value="<?php echo $options['slideshow_width']; ?>" class="small-text" />px<br>
-						<?php _e('Height', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings_options[slideshow_height]" value="<?php echo $options['slideshow_height']; ?>" class="small-text" />px
+						<?php _e('Width', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings_options[slideshow_width]" value="<?php echo $options['slideshow_width']; ?>" class="small-text" placeholder="640" />px<br>
+						<?php _e('Height', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings_options[slideshow_height]" value="<?php echo $options['slideshow_height']; ?>" class="small-text" placeholder="480"  />px
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row"><?php _e('Slideshow Navigation', 'portfoolio'); ?></th>
+					<td>
+						<input type="checkbox" name="portfoolio_settings_options[autoplay_slideshow]" <?php if($options['autoplay_slideshow'] || ! $options['settings_saved']) { ?>checked="checked"<?php } ?> />
+						<label><?php _e('Automatically Play Slideshow', 'portfoolio'); ?></label>
+						<p class="description"><?php _e('Disabling this will require viewers to manually move between images in a slideshow.', 'portfoolio'); ?></p>
+						
+						<input type="checkbox" name="portfoolio_settings_options[pause_on_hover]" <?php if($options['pause_on_hover'] || ! $options['settings_saved']) { ?>checked="checked"<?php } ?> />
+						<label><?php _e('Pause When Viewer Hovers Over Slideshow', 'portfoolio'); ?></label>
+						<p class="description"><?php _e('Slideshow will resume playing if \'Autoplay\' is turned on and the user moves their cursor off the slideshow.', 'portfoolio'); ?></p>
+						
+						<input type="checkbox" name="portfoolio_settings_options[hide_prev_next_buttons]" value="<?php echo $options['hide_prev_next_buttons']; ?>" />
+						<label><?php _e('Hide Previous/Next Image Buttons', 'portfoolio'); ?></label>
+						<p class="description"><?php _e('To turn other elements into Previous/next buttons, just add the classes \'portfoolio_prev_image\' or \'portfoolio_next_image\', respectively.', 'portfoolio'); ?></p>
 					</td>
 				</tr>
 				<tr valign="top">
 					<th scope="row"><?php _e('Slideshow Speed', 'portfoolio'); ?><br></th>
 					<td>
-						<input type="text" name="portfoolio_settings_options[slideshow_speed]" value="<?php echo $options['slideshow_speed']; ?>" class="small-text" /> seconds
+						<input type="text" name="portfoolio_settings_options[slideshow_speed]" value="<?php echo $options['slideshow_speed']; ?>" class="small-text" placeholder="5"  /> <?php _e('seconds', 'portfoolio'); ?>
 						<p class="description"><?php _e('The number of seconds a slide should be shown before transitioning to the next.', 'portfoolio'); ?></p>
-					</td>
-				</tr>
-				
-				<tr valign="top">
-					<th scope="row"><?php _e('Item Order', 'portfoolio'); ?><br><span></span></th>
-					<td>
-						<select name="portfoolio_settings_options[item_order]" value="<?php echo $options['item_order']; ?>">
-							<option value="count">List Order</option>
-							<option value="date">Date</option>
-						</select>
-						<p class="description"><?php _e('List Order is the order in which items appear in the Gallery Item list. To change the order, just drag and drop them into the order you would like them to appear.', 'portfoolio'); ?></p>
 					</td>
 				</tr>
 			</table>
 			<p class="submit">
+			<input type="hidden" name="portfoolio_settings_options[settings_saved]" value="1">
 			<input type="submit" class="button-primary" value="<?php _e('Save Changes') ?>" />
 			</p>
 		</form>
@@ -361,13 +381,27 @@ function portfoolio_images_only_array($item) {
 
 // DISPLAY SLIDESHOW OF WORK'S IMAGES
 function portfoolio_slideshow($attr = null) {
+	$portfoolio_settings = get_option('portfoolio_settings_options');
 	if($attr['width']) $width = $attr['width'];
+	elseif($portfoolio_settings['slideshow_width']) $width = $portfoolio_settings['slideshow_width'];
 	else $width = 640;
+	
 	if($attr['height']) $height = $attr['height'];
+	elseif($portfoolio_settings['slideshow_height']) $height = $portfoolio_settings['slideshow_height'];
 	else $height = 480;
-	$autoplay = $attr['autoplay'];
-	if($attr['delay']) $autoplay_delay = $attr['delay'];
+	
+	if($attr['autoplay']) $autoplay = $attr['autoplay'];
+	elseif($portfoolio_settings['autoplay_slideshow'] || !$portfoolio_settings['settings_saved']) $autoplay = true; //if settings_saved == false (meaning the user hasn't used the Portfoolio Settings page), then that means we'll go with the default of turning on autoplay
+	else $autoplay = false;
+	
+	if($attr['pause_on_hover']) $pause_on_hover = $attr['pause_on_hover'];
+	elseif($portfoolio_settings['pause_on_hover'] || !$portfoolio_settings['settings_saved']) $pause_on_hover = true; //if settings_saved == false (meaning the user hasn't used the Portfoolio Settings page), then that means we'll go with the default of turning on autoplay
+	else $pause_on_hover = false;
+	
+	if($attr['slideshow_speed']) $autoplay_delay = $attr['slideshow_speed'];
+	elseif($portfoolio_settings['slideshow_speed']) $autoplay_delay = $portfoolio_settings['slideshow_speed'] * 1000;
 	else $autoplay_delay = 5000;
+	
 	//$lightbox = $attr['lightbox'];
 
 	global $post;
@@ -375,11 +409,11 @@ function portfoolio_slideshow($attr = null) {
 	$items = explode(', ', $media_items); ?>
 	
 	<?php if(count($items) > 1) { ?>
-	<div class="portfoolio_slideshow <?php if($autoplay) echo 'autoplay'; ?>" <?php if($autoplay) echo 'data-delay="'.$autoplay_delay.'"'; ?> style="<?php if($width) echo "width: ".$width."px;"; if($width) echo "height: ".$height."px;"; ?>">
+	<div class="portfoolio_slideshow <?php if($autoplay) echo 'autoplay'; ?> <?php if($pause_on_hover) echo 'pause_on_hover'; ?>" <?php if($autoplay) echo 'data-delay="'.$autoplay_delay.'"'; ?> style="<?php if($width) echo "width: ".$width."px;"; if($width) echo "height: ".$height."px;"; ?>">
 		<?php 
 		$slide_num = 1;
 		foreach($items as $item) {
-			?><div class="portfoolio_slide" data-slide-num="<?php echo $slide_num++; ?>"><?php portfoolio_get_item($item); ?></div><?php
+			?><div class="portfoolio_slide" data-slide-num="<?php echo $slide_num++; ?>" data-caption=""><?php portfoolio_get_item($item); ?></div><?php
 		} ?>
 		<div class="portfoolio_slideshowcontrols"><span class="portfoolio_prev_image">Previous</span><span class="portfoolio_next_image">Next</span></div>
 	</div>
