@@ -3,9 +3,16 @@ jQuery(document).ready(function($){
 	// HIDE IMAGES
 	$('.portfoolio_slideshow .portfoolio_slide:gt(0)').hide();
 	
+	// CENTER SMALLER IMAGES IN SLIDE
+	$('.portfoolio_slide img').each(function() {
+		// margin-top = half of box height - half of image height
+		var margin_top = $(this).parent().height()/2 - $(this).height()/2;
+		$(this).css('margin-top', margin_top);
+	});
+	
     	
 	// PAUSE ON HOVER?
-	$('.portfoolio_slideshow.pause_on_hover').hover(function() { console.log('hovering'); portfoolio_slideshow_hover = true; }, function() { portfoolio_slideshow_hover = false; });
+	$('.portfoolio_slideshow.pause_on_hover').hover(function() { portfoolio_slideshow_hover = true; }, function() { portfoolio_slideshow_hover = false; });
 	
 	// START SLIDESHOW
 	if($('.portfoolio_slideshow.autoplay').size() > 0) 
