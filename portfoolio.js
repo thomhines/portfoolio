@@ -157,7 +157,8 @@ jQuery(document).ready(function($){
 		}
 		
 		// REMOVE THUMBNAIL BUTTON ON NON-IMAGE ITEMS
-		if(isNaN(item)) new_row.find('.set_as_thumbnail').remove();
+		if(isNaN(item)) new_row.find('.set_as_thumbnail').addClass('disabled');
+		else new_row.find('.set_as_thumbnail').removeClass('disabled');
 			
 		// CLEAR ADD_MEDIA FIELDS
 		$('#video_url').val('');

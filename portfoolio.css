@@ -38,13 +38,22 @@
 	margin: 10px 0;
 }
 
+.portfoolio_media_row .button {
+	margin: 0 0 10px;
+	width: 100%;
+}
+
+.portfoolio_media_row .button.disabled {
+	display: none;
+}
+
 .portfoolio_media span {
 	display: inline-block;
 	margin: 0 10px;
 	font-size: 10px;
 }
 
-.embed_fields {
+.portfoolio_media .embed_fields {
 	display: inline-block;
 }
 

@@ -3,15 +3,12 @@
 Plugin Name: Portfoolio
 Plugin URI: http://thomhines.com/portfoolio/
 Description: Set up a gallery or portfolio using easier than ever
-Version: 1.0
+Version: 1.0.0
 Author: Thom Hines
 Author URI: http://thomhines.com/
 */
 
-$version = '1.0';
-
-
-
+define("PORTFOOLIO_VERSION", "1.0.0");
 
 /*----------------------------------------------------------------------*
 
@@ -26,24 +23,18 @@ load_plugin_textdomain('portfoolio', false, basename( dirname( __FILE__ ) ).'/la
 // RUN ADMIN ONLY SCRIPTS/STYLES
 add_action('admin_enqueue_scripts', 'portfoolio_admin_scripts');
 function portfoolio_admin_scripts() {
-	global $post;
-	if ($_GET['post'] == 'work' || $post->post_type == 'work') {
-		wp_enqueue_media();
-		wp_register_script('portfoolio-js', plugins_url('portfoolio.js', __FILE__), array('jquery'), $version);
-		wp_enqueue_script('portfoolio-js');
-		wp_enqueue_style('portfoolio-styles', plugins_url('portfoolio.css', __FILE__), array(), $version);
-	}
+	wp_enqueue_media();
+	wp_register_script('portfoolio-js', plugins_url('portfoolio.js', __FILE__), array('jquery'), PORTFOOLIO_VERSION);
+	wp_enqueue_script('portfoolio-js');
+	wp_enqueue_style('portfoolio-styles', plugins_url('portfoolio.css', __FILE__), array(), PORTFOOLIO_VERSION);
 }
 
 // RUN FRONT-END ONLY SCRIPTS/STYLES
 add_action( 'wp_enqueue_scripts', 'portfoolio_frontend_scripts' );
 function portfoolio_frontend_scripts() {
-	global $post;
-	if ($_GET['post'] == 'work' || $post->post_type == 'work') {
-		wp_register_script('portfoolio-slideshow-js', plugins_url('portfoolio-slideshow.js', __FILE__), array('jquery'), $version);
-		wp_enqueue_script('portfoolio-slideshow-js');
-		wp_enqueue_style('portfoolio-slideshow-styles', plugins_url('portfoolio-slideshow.css', __FILE__), array(), $version);
-	}
+	wp_register_script('portfoolio-slideshow-js', plugins_url('portfoolio-slideshow.js', __FILE__), array('jquery'), PORTFOOLIO_VERSION);
+	wp_enqueue_script('portfoolio-slideshow-js');
+	wp_enqueue_style('portfoolio-slideshow-styles', plugins_url('portfoolio-slideshow.css', __FILE__), array(), PORTFOOLIO_VERSION);
 }
 
 
@@ -147,11 +138,9 @@ function portfoolio_media_box_contents() {
 	foreach($items as $item) { ?>
 		<tr class="portfoolio_media_row <?php if(!$items[0]) { ?>blank<?php } ?>" data-media-value="<?php echo $item; ?>">
 			<td>
-				<span class="edit_media_item button"><?php _e('Edit', 'portfoolio'); ?></span>
+				<!-- <span class="edit_media_item button"><?php _e('Edit', 'portfoolio'); ?></span> -->
 				<span class="remove_media_item button"><?php _e('Remove', 'portfoolio'); ?></span>
-				<?php if(is_numeric($item)) { ?>
-				<span class="set_as_thumbnail button"><?php _e('Use as Thumbnail', 'portfoolio'); ?></span>
-				<?php } ?>
+				<span class="set_as_thumbnail button <?php if(!is_numeric($item)) echo 'disabled'; ?>"><?php _e('Use as Thumbnail', 'portfoolio'); ?></span>
 			</td>
 			<td>
 				<?php portfoolio_get_item_thumbnail($item); ?>
@@ -170,7 +159,7 @@ function portfoolio_media_box_contents() {
 
 	</tbody>
 	<tr class="add_new_media"><td colspan="3">
-		<h4><?php _e('Add New Image/Video', 'portfoolio'); ?></h4>
+		<h4><?php _e('Add New Image/Video/Media', 'portfoolio'); ?></h4>
 		<input id="upload_image_button" class="button" type="button" value="<?php _e('Upload Image', 'portfoolio'); ?>" />
 		
 		<div class="embed_fields">
@@ -207,7 +196,6 @@ function portfoolio_save_postdata($post_id) {
 	if (!current_user_can('edit_page', $post_id)) return;
 	
 	if($_POST['media_items']) {
-		//sanitize user input
 		$media_items = sanitize_text_field($_POST['media_items']);
 		update_post_meta($post_id, 'media_items', $media_items);
 	}
@@ -238,7 +226,22 @@ function portfoolio_works_column_data($column_name, $id) {
 // WHITELIST SETTINGS
 add_action('admin_init', 'portfoolio_settings_init' );
 function portfoolio_settings_init() {
-	register_setting( 'portfoolio_settings', 'portfoolio_settings_options', 'portfoolio_sanitize_settings' );
+	register_setting( 'portfoolio_settings', 'portfoolio_settings', 'portfoolio_sanitize_settings' );
+	
+	// SET DEFAULTS ON FIRST LOAD
+	$portfoolio_settings = get_option('portfoolio_settings');
+	if(!$portfoolio_settings) {
+		update_option('portfoolio_version', PORTFOOLIO_VERSION);
+		$portfoolio_settings_array = array(
+			"item_order" => "menu_order",
+			"slideshow_width" => "640",
+			"slideshow_height" => "480",
+			"autoplay_slideshow" => "on",
+			"pause_on_hover" => "on",
+			"slideshow_speed" => "5"
+		);
+		update_option('portfoolio_settings', $portfoolio_settings_array);
+	}
 }
 
 // ADD SETTINGS PAGE
@@ -246,8 +249,7 @@ add_action('admin_menu', 'portfoolio_settings_page');
 function portfoolio_settings_page() {
 	add_options_page('Portfoolio Settings', 'Portfoolio', 'manage_options', 'portfoolio_settings', 'portfoolio_settings_do_page');
 }
-
-// Draw the menu page itself
+// DRAW THE MENU PAGE ITSELF
 function portfoolio_settings_do_page() {
 	?>
 	<div class="wrap">
@@ -255,15 +257,16 @@ function portfoolio_settings_do_page() {
 		<h2><?php _e('Portfoolio Settings', 'portfoolio'); ?></h2>
 		<form method="post" action="options.php">
 			<?php settings_fields('portfoolio_settings'); ?>
-			<?php $options = get_option('portfoolio_settings_options'); ?>
+			<?php $portfoolio_settings = get_option('portfoolio_settings'); ?>
 			<table class="form-table">
 				
 				<tr valign="top">
 					<th scope="row"><?php _e('Gallery Item Order', 'portfoolio'); ?><br><span></span></th>
 					<td>
-						<select name="portfoolio_settings_options[item_order]" value="<?php echo $options['item_order']; ?>">
-							<option value="count"><?php _e('List Order', 'portfoolio'); ?></option>
-							<option value="date"><?php _e('Date', 'portfoolio'); ?></option>
+						<select name="portfoolio_settings[item_order]">
+							<option value="menu_order" <?php if ($portfoolio_settings['item_order'] == 'menu_order') echo 'selected="selected"'; ?>><?php _e('List Order', 'portfoolio'); ?></option>
+							<option value="date" <?php if ($portfoolio_settings['item_order'] == 'date') echo 'selected="selected"'; ?>><?php _e('Date', 'portfoolio'); ?></option>
+							<option value="rand" <?php if ($portfoolio_settings['item_order'] == 'rand') echo 'selected="selected"'; ?>><?php _e('Random', 'portfoolio'); ?></option>
 						</select>
 						<p class="description"><?php _e('List Order is the order in which items appear in the Gallery Item list. To change the order, just drag and drop them into the order you would like them to appear.', 'portfoolio'); ?></p>
 					</td>
@@ -272,22 +275,22 @@ function portfoolio_settings_do_page() {
 				<tr valign="top">
 					<th scope="row"><?php _e('Slideshow Size', 'portfoolio'); ?></th>
 					<td>
-						<?php _e('Width', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings_options[slideshow_width]" value="<?php echo $options['slideshow_width']; ?>" class="small-text" placeholder="640" />px<br>
-						<?php _e('Height', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings_options[slideshow_height]" value="<?php echo $options['slideshow_height']; ?>" class="small-text" placeholder="480"  />px
+						<?php _e('Width', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings[slideshow_width]" value="<?php echo $portfoolio_settings['slideshow_width']; ?>" class="small-text" />px<br>
+						<?php _e('Height', 'portfoolio'); ?>: <input type="number" step="10" min="0" name="portfoolio_settings[slideshow_height]" value="<?php echo $portfoolio_settings['slideshow_height']; ?>" class="small-text" />px
 					</td>
 				</tr>
 				<tr valign="top">
 					<th scope="row"><?php _e('Slideshow Navigation', 'portfoolio'); ?></th>
 					<td>
-						<input type="checkbox" name="portfoolio_settings_options[autoplay_slideshow]" <?php if($options['autoplay_slideshow'] || ! $options['settings_saved']) { ?>checked="checked"<?php } ?> />
+						<input type="checkbox" name="portfoolio_settings[autoplay_slideshow]" <?php if($portfoolio_settings['autoplay_slideshow'] || !$portfoolio_settings) { ?>checked="checked"<?php } ?> />
 						<label><?php _e('Automatically Play Slideshow', 'portfoolio'); ?></label>
 						<p class="description"><?php _e('Disabling this will require viewers to manually move between images in a slideshow.', 'portfoolio'); ?></p>
 						
-						<input type="checkbox" name="portfoolio_settings_options[pause_on_hover]" <?php if($options['pause_on_hover'] || ! $options['settings_saved']) { ?>checked="checked"<?php } ?> />
+						<input type="checkbox" name="portfoolio_settings[pause_on_hover]" <?php if($portfoolio_settings['pause_on_hover'] || !$portfoolio_settings) { ?>checked="checked"<?php } ?> />
 						<label><?php _e('Pause When Viewer Hovers Over Slideshow', 'portfoolio'); ?></label>
 						<p class="description"><?php _e('Slideshow will resume playing if \'Autoplay\' is turned on and the user moves their cursor off the slideshow.', 'portfoolio'); ?></p>
 						
-						<input type="checkbox" name="portfoolio_settings_options[hide_prev_next_buttons]" value="<?php echo $options['hide_prev_next_buttons']; ?>" />
+						<input type="checkbox" name="portfoolio_settings[hide_prev_next_buttons]" <?php if($portfoolio_settings['hide_prev_next_buttons'] || !$portfoolio_settings) { ?>checked="checked"<?php } ?> />
 						<label><?php _e('Hide Previous/Next Image Buttons', 'portfoolio'); ?></label>
 						<p class="description"><?php _e('To turn other elements into Previous/next buttons, just add the classes \'portfoolio_prev_image\' or \'portfoolio_next_image\', respectively.', 'portfoolio'); ?></p>
 					</td>
@@ -295,13 +298,12 @@ function portfoolio_settings_do_page() {
 				<tr valign="top">
 					<th scope="row"><?php _e('Slideshow Speed', 'portfoolio'); ?><br></th>
 					<td>
-						<input type="text" name="portfoolio_settings_options[slideshow_speed]" value="<?php echo $options['slideshow_speed']; ?>" class="small-text" placeholder="5"  /> <?php _e('seconds', 'portfoolio'); ?>
+						<input type="text" name="portfoolio_settings[slideshow_speed]" value="<?php echo $portfoolio_settings['slideshow_speed']; ?>" class="small-text" /> <?php _e('seconds', 'portfoolio'); ?>
 						<p class="description"><?php _e('The number of seconds a slide should be shown before transitioning to the next.', 'portfoolio'); ?></p>
 					</td>
 				</tr>
 			</table>
 			<p class="submit">
-			<input type="hidden" name="portfoolio_settings_options[settings_saved]" value="1">
 			<input type="submit" class="button-primary" value="<?php _e('Save Changes') ?>" />
 			</p>
 		</form>
@@ -309,13 +311,12 @@ function portfoolio_settings_do_page() {
 	<?php	
 }
 
-// Sanitize and validate input. Accepts an array, return a sanitized array.
+// SANITIZE AND VALIDATE INPUT. ACCEPTS AN ARRAY, RETURN A SANITIZED ARRAY.
 function portfoolio_sanitize_settings($input) {
 	// Our first value is either 0 or 1
-	$input['option1'] = ( $input['option1'] == 1 ? 1 : 0 );
-	
-	// Say our second option must be safe text with no HTML tags
-	$input['sometext'] =  wp_filter_nohtml_kses($input['sometext']);
+	$input['slideshow_width'] = intval($input['slideshow_width']);
+	$input['slideshow_height'] = intval($input['slideshow_height']);
+	$input['slideshow_speed'] = intval($input['slideshow_speed']);
 	
 	return $input;
 }
@@ -330,15 +331,20 @@ function portfoolio_sanitize_settings($input) {
 
 
 // DISPLAY LIST OF THUMBNAILS
-function portfoolio_gallery($image_size = 'thumbnail', $category = null) {
-	if(get_query_var('cat') && $category == null) $category = get_query_var('cat');
-	$args=array(
-		'post_type' => 'work',
-		'orderby' => 'menu_order',
-		'order' => 'ASC',
-		'cat' => $category
-		);
+function portfoolio_gallery($args = array()) {
+
+	$portfoolio_settings = get_option('portfoolio_settings');
+
+	// SET UP DEFAULTS
+	$thumbnail_size = (isset($args['thumbnail_size'])) ? $args['thumbnail_size'] : 'thumbnail';
+	$args['post_type'] = (isset($args['post_type'])) ? $args['post_type'] : 'work';
+	$args['cat'] = (isset($args['cat'])) ? $args['cat'] : get_query_var('cat');
+	$args['orderby'] = (isset($args['orderby'])) ? $args['orderby'] : (isset($portfoolio_settings['item_order']) ? $portfoolio_settings['item_order'] : 'menu_order');
+	$args['order'] = (isset($args['order'])) ? $args['order'] : (($portfoolio_settings['item_order'] == 'menu_order') ? 'ASC' : 'DESC');
 	
+	// REMOVE NON-WORDPRESS ATTRIBUTES FROM ARGS ARRAY
+	unset($args['thumbnail_size']);
+		
 	$query = new WP_Query($args);
 	
 	if ( $query->have_posts() ) : 
@@ -346,12 +352,17 @@ function portfoolio_gallery($image_size = 'thumbnail', $category = null) {
 		while ( $query->have_posts() ) : $query->the_post(); ?>
 			<li class='portfoolio_work'>
 			<a href="<?php echo get_permalink($query->post->ID); ?>">
-				<?php portfoolio_thumbnail($query->post->ID, $image_size); ?>
+				<?php portfoolio_thumbnail($query->post->ID, $thumbnail_size); ?>
 			</a>
 			</li>
 		<?php endwhile;?>
 	<?php endif;
 }
+function portfoolio_gallery_shortcode($atts) {
+	portfoolio_gallery($atts);
+}
+add_shortcode( 'portfoolio_gallery', 'portfoolio_gallery_shortcode' );
+
 
 // DISPLAY 'WORK' THUMBNAIL
 function portfoolio_thumbnail($post_id, $image_size = 'thumbnail') {
@@ -373,6 +384,7 @@ function portfoolio_thumbnail($post_id, $image_size = 'thumbnail') {
 		echo "<img src='".portfoolio_get_item_thumbnail_url($items[0])."' alt=''>";
 	}
 }
+// FUNCTION TO REMOVE ALL REMOTE FILES FROM ARRAY
 function portfoolio_images_only_array($item) {
 	if(strpos($item, 'http') === false) return true;
 	else return false;
@@ -380,32 +392,23 @@ function portfoolio_images_only_array($item) {
 
 
 // DISPLAY SLIDESHOW OF WORK'S IMAGES
-function portfoolio_slideshow($attr = null) {
-	$portfoolio_settings = get_option('portfoolio_settings_options');
-	if($attr['width']) $width = $attr['width'];
-	elseif($portfoolio_settings['slideshow_width']) $width = $portfoolio_settings['slideshow_width'];
-	else $width = 640;
-	
-	if($attr['height']) $height = $attr['height'];
-	elseif($portfoolio_settings['slideshow_height']) $height = $portfoolio_settings['slideshow_height'];
-	else $height = 480;
-	
-	if($attr['autoplay']) $autoplay = $attr['autoplay'];
-	elseif($portfoolio_settings['autoplay_slideshow'] || !$portfoolio_settings['settings_saved']) $autoplay = true; //if settings_saved == false (meaning the user hasn't used the Portfoolio Settings page), then that means we'll go with the default of turning on autoplay
-	else $autoplay = false;
-	
-	if($attr['pause_on_hover']) $pause_on_hover = $attr['pause_on_hover'];
-	elseif($portfoolio_settings['pause_on_hover'] || !$portfoolio_settings['settings_saved']) $pause_on_hover = true; //if settings_saved == false (meaning the user hasn't used the Portfoolio Settings page), then that means we'll go with the default of turning on autoplay
-	else $pause_on_hover = false;
-	
-	if($attr['slideshow_speed']) $autoplay_delay = $attr['slideshow_speed'];
-	elseif($portfoolio_settings['slideshow_speed']) $autoplay_delay = $portfoolio_settings['slideshow_speed'] * 1000;
-	else $autoplay_delay = 5000;
-	
-	//$lightbox = $attr['lightbox'];
-
+function portfoolio_slideshow($args = array()) {
 	global $post;
-	$media_items = get_post_meta($post->ID, 'media_items', true);
+	
+	$portfoolio_settings = get_option('portfoolio_settings');
+	
+	// LOAD SETTINGS (ORDER: FUNCTION ARGUMENT, PLUGIN SETTING, DEFAULT VALUE)
+	$work_id = (isset($args['work'])) ? $args['work'] : $post->ID;
+	$width = (isset($args['width'])) ? $args['width'] : (isset($portfoolio_settings['slideshow_width']) ? $portfoolio_settings['slideshow_width'] : 640);
+	$height = (isset($args['height'])) ? $args['height'] : (isset($portfoolio_settings['slideshow_height']) ? $portfoolio_settings['slideshow_height'] : 480);
+	$autoplay = (isset($args['autoplay'])) ? $args['autoplay'] : (isset($portfoolio_settings['autoplay_slideshow']) || !$portfoolio_settings ? true : false);
+	$autoplay_delay = (isset($args['slideshow_speed'])) ? $args['slideshow_speed']*1000 : (isset($portfoolio_settings['slideshow_speed']) ? $portfoolio_settings['slideshow_speed']*1000 : 5000);
+	$pause_on_hover = (isset($args['pause_on_hover'])) ? $args['pause_on_hover'] : (isset($portfoolio_settings['pause_on_hover']) || !$portfoolio_settings ? true : false);
+	$hide_prev_next_buttons = (isset($args['hide_prev_next_buttons'])) ? $args['hide_prev_next_buttons'] : (isset($portfoolio_settings['hide_prev_next_buttons']) ? true : false);
+	
+	if($autoplay_delay < 1) $$autoplay_delay = 1;
+	
+	$media_items = get_post_meta($work_id, 'media_items', true);
 	$items = explode(', ', $media_items); ?>
 	
 	<?php if(count($items) > 1) { ?>
@@ -415,18 +418,22 @@ function portfoolio_slideshow($attr = null) {
 		foreach($items as $item) {
 			?><div class="portfoolio_slide" data-slide-num="<?php echo $slide_num++; ?>" data-caption=""><?php portfoolio_get_item($item); ?></div><?php
 		} ?>
-		<div class="portfoolio_slideshowcontrols"><span class="portfoolio_prev_image">Previous</span><span class="portfoolio_next_image">Next</span></div>
+		<div class="portfoolio_slideshowcontrols"><?php if(!$hide_prev_next_buttons) { ?><span class="portfoolio_prev_image">Previous</span><span class="portfoolio_next_image">Next</span><?php } ?></div>
+		
 	</div>
 	<?php } else {
 		portfoolio_get_item($items[0]);
 	} ?>
-    <p class="portfoolio_imagecaption"><?= $imagecaption ?></p>
+    <!-- <p class="portfoolio_imagecaption"><? //echo $imagecaption ?></p> -->
     <?php if(count($items) > 1) { ?>
 		<p class="portfoolio_imagecount" totalimages="<?= $slide_num-1 ?>">1/<?= $slide_num-1 ?></p>
 	<?php } ?>
 <?php
 }
-
+function portfoolio_slideshow_shortcode($atts) {
+	portfoolio_slideshow($atts);
+}
+add_shortcode( 'portfoolio_slideshow', 'portfoolio_slideshow_shortcode' );
 
 
 
@@ -467,10 +474,10 @@ function portfoolio_get_item_thumbnail($item) {
 }
 
 // DISPLAY FULL SIZE IMAGE FOR PARTICULAR WORK
-function portfoolio_get_item($item, $attr = null) {
-	if($attr['width']) $width = $attr['width'];
+function portfoolio_get_item($item, $args = null) {
+	if($args['width']) $width = $args['width'];
 	else $width = 640;
-	if($attr['height']) $height = $attr['height'];
+	if($args['height']) $height = $args['height'];
 	else $height = 480;
 	
 	if(strpos($item, 'youtube') !== false) {
