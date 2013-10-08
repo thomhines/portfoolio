@@ -238,7 +238,8 @@ function portfoolio_settings_init() {
 			"slideshow_height" => "480",
 			"autoplay_slideshow" => "on",
 			"pause_on_hover" => "on",
-			"slideshow_speed" => "5"
+			"slideshow_speed" => "5",
+			"progress_indicator" => "number"
 		);
 		update_option('portfoolio_settings', $portfoolio_settings_array);
 	}

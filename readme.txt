@@ -97,7 +97,8 @@ Again, the `$args` variable is not required, and the function will run with the 
 		'autoplay' 					=> true,
 		'slideshow_speed'			=> 5, // number of seconds a slide is shown when autoplay is enabled
 		'pause_on_hover' 			=> true,
-		'hide_prev_next_buttons'	=> false
+		'hide_prev_next_buttons'	=> false,
+		'progress_indicator'		=> 'number'
 	);
 	portfoolio_slideshow(args);
 	?>
