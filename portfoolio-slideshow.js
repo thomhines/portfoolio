@@ -51,9 +51,8 @@ jQuery(document).ready(function($){
 		var iframe = $('.portfoolio_slideshow .portfoolio_slide:first-child').find('iframe');
 		if(iframe.size() > 0) iframe.attr('src', iframe.attr('src')); 
 		$('.portfoolio_slideshow .portfoolio_slide:first-child').fadeOut("slow").insertBefore('.portfoolio_slideshowcontrols');
-		$('.portfoolio_imagecount').html(curimage+"/"+$('.portfoolio_imagecount').attr('totalimages'));
-		$('.portfoolio_imagecaption').html(caption);
-		console.log('next done');
+		updateProgressIndicator(curimage);
+		//$('.portfoolio_imagecaption').html(caption);
 	}
 	
 	function portfoolio_prev_image() {
@@ -63,7 +62,17 @@ jQuery(document).ready(function($){
 		var iframe = $('.portfoolio_slideshow .portfoolio_slide:nth-child(2)').find('iframe');
 		if(iframe.size() > 0) iframe.attr('src', iframe.attr('src')); 
 		$('.portfoolio_slideshow .portfoolio_slide:nth-child(2)').fadeOut("slow");
-		$('.portfoolio_imagecount').html(curimage+"/"+$('.portfoolio_imagecount').attr('totalimages'));
+		updateProgressIndicator(curimage);
+	}
+	
+	function updateProgressIndicator(img_num) {
+		if($('.portfoolio_progress_indicator.number').length > 0) {
+			$('.portfoolio_progress_indicator.number').html(img_num+"/"+$('.portfoolio_progress_indicator').attr('totalimages'));
+		}
+		else if($('.portfoolio_progress_indicator.dots').length > 0) {
+			$('.portfoolio_progress_indicator .dot').removeClass('current');
+			$('.portfoolio_progress_indicator .dot:eq('+(img_num-1)+')').addClass('current');
+		}
 	}
 
 });

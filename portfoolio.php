@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: Portfoolio
+Plugin Name: Portfoolio Media Gallery
 Plugin URI: http://thomhines.com/portfoolio/
-Description: Set up a gallery or portfolio using easier than ever
+Description: One of the easiest ways to turn your WordPress site into a portfolio or gallery. With images, video and more. 
 Version: 1.0.0
 Author: Thom Hines
 Author URI: http://thomhines.com/
@@ -265,10 +265,10 @@ function portfoolio_settings_do_page() {
 					<td>
 						<select name="portfoolio_settings[item_order]">
 							<option value="menu_order" <?php if ($portfoolio_settings['item_order'] == 'menu_order') echo 'selected="selected"'; ?>><?php _e('List Order', 'portfoolio'); ?></option>
-							<option value="date" <?php if ($portfoolio_settings['item_order'] == 'date') echo 'selected="selected"'; ?>><?php _e('Date', 'portfoolio'); ?></option>
+							<option value="date" <?php if ($portfoolio_settings['item_order'] == 'date') echo 'selected="selected"'; ?>><?php _e('Post Date', 'portfoolio'); ?></option>
 							<option value="rand" <?php if ($portfoolio_settings['item_order'] == 'rand') echo 'selected="selected"'; ?>><?php _e('Random', 'portfoolio'); ?></option>
 						</select>
-						<p class="description"><?php _e('List Order is the order in which items appear in the Gallery Item list. To change the order, just drag and drop them into the order you would like them to appear.', 'portfoolio'); ?></p>
+						<p class="description"><?php _e('"List Order" is the order in which items appear in the Gallery Item list. To change the order, I would recommend installing the fantastic "Intuitive Custom Post Order" plug-in by hijiri.', 'portfoolio'); ?></p>
 					</td>
 				</tr>
 				
@@ -300,6 +300,17 @@ function portfoolio_settings_do_page() {
 					<td>
 						<input type="text" name="portfoolio_settings[slideshow_speed]" value="<?php echo $portfoolio_settings['slideshow_speed']; ?>" class="small-text" /> <?php _e('seconds', 'portfoolio'); ?>
 						<p class="description"><?php _e('The number of seconds a slide should be shown before transitioning to the next.', 'portfoolio'); ?></p>
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row"><?php _e('Progress Indicator', 'portfoolio'); ?><br><span></span></th>
+					<td>
+						<select name="portfoolio_settings[progress_indicator]">
+							<option value="none" <?php if ($portfoolio_settings['progress_indicator'] == 'none') echo 'selected="selected"'; ?>><?php _e('None', 'portfoolio'); ?></option>
+							<option value="number" <?php if ($portfoolio_settings['progress_indicator'] == 'number') echo 'selected="selected"'; ?>><?php _e('Image Number', 'portfoolio'); ?></option>
+							<option value="dots" <?php if ($portfoolio_settings['progress_indicator'] == 'dots') echo 'selected="selected"'; ?>><?php _e('Dots', 'portfoolio'); ?></option>
+						</select>
+						<p class="description"><?php _e('The way in which a slideshow indicates which image you are on within a series of images.', 'portfoolio'); ?></p>
 					</td>
 				</tr>
 			</table>
@@ -397,12 +408,13 @@ function portfoolio_slideshow($args = array()) {
 	
 	$portfoolio_settings = get_option('portfoolio_settings');
 	
-	// LOAD SETTINGS (ORDER: FUNCTION ARGUMENT, PLUGIN SETTING, DEFAULT VALUE)
+	// LOAD SETTINGS (ORDER OF PREFERENCE: FUNCTION ARGUMENT, PLUGIN SETTING, DEFAULT VALUE)
 	$work_id = (isset($args['work'])) ? $args['work'] : $post->ID;
 	$width = (isset($args['width'])) ? $args['width'] : (isset($portfoolio_settings['slideshow_width']) ? $portfoolio_settings['slideshow_width'] : 640);
 	$height = (isset($args['height'])) ? $args['height'] : (isset($portfoolio_settings['slideshow_height']) ? $portfoolio_settings['slideshow_height'] : 480);
 	$autoplay = (isset($args['autoplay'])) ? $args['autoplay'] : (isset($portfoolio_settings['autoplay_slideshow']) || !$portfoolio_settings ? true : false);
 	$autoplay_delay = (isset($args['slideshow_speed'])) ? $args['slideshow_speed']*1000 : (isset($portfoolio_settings['slideshow_speed']) ? $portfoolio_settings['slideshow_speed']*1000 : 5000);
+	$progress_indicator = isset($args['progress_indicator']) ? $args['progress_indicator'] : (isset($portfoolio_settings['progress_indicator']) ? $portfoolio_settings['progress_indicator'] : 'number');
 	$pause_on_hover = (isset($args['pause_on_hover'])) ? $args['pause_on_hover'] : (isset($portfoolio_settings['pause_on_hover']) || !$portfoolio_settings ? true : false);
 	$hide_prev_next_buttons = (isset($args['hide_prev_next_buttons'])) ? $args['hide_prev_next_buttons'] : (isset($portfoolio_settings['hide_prev_next_buttons']) ? true : false);
 	
@@ -412,6 +424,7 @@ function portfoolio_slideshow($args = array()) {
 	$items = explode(', ', $media_items); ?>
 	
 	<?php if(count($items) > 1) { ?>
+	<?php echo $autoplay; ?>
 	<div class="portfoolio_slideshow <?php if($autoplay) echo 'autoplay'; ?> <?php if($pause_on_hover) echo 'pause_on_hover'; ?>" <?php if($autoplay) echo 'data-delay="'.$autoplay_delay.'"'; ?> style="<?php if($width) echo "width: ".$width."px;"; if($width) echo "height: ".$height."px;"; ?>">
 		<?php 
 		$slide_num = 1;
@@ -425,9 +438,19 @@ function portfoolio_slideshow($args = array()) {
 		portfoolio_get_item($items[0]);
 	} ?>
     <!-- <p class="portfoolio_imagecaption"><? //echo $imagecaption ?></p> -->
-    <?php if(count($items) > 1) { ?>
-		<p class="portfoolio_imagecount" totalimages="<?= $slide_num-1 ?>">1/<?= $slide_num-1 ?></p>
-	<?php } ?>
+    <?php 
+    	if(count($items) > 1 && $progress_indicator != 'none') { 
+	    
+		    if($progress_indicator == 'number') { ?>
+				<p class="portfoolio_progress_indicator number" totalimages="<?= $slide_num-1 ?>">1/<?= $slide_num-1 ?></p>
+			<?php } else { ?>
+				<p class="portfoolio_progress_indicator dots" totalimages="<?= $slide_num-1 ?>">
+					<?php for($x = 1; $x < $slide_num; $x++) { ?>
+						<span class='dot <?php if($x == 1) echo 'current'; ?>' data-slide-num='<?php echo $x; ?>'>Image #<?php echo $x; ?></span>
+					<?php } ?>
+				</p>
+			<?php }
+		} ?>
 <?php
 }
 function portfoolio_slideshow_shortcode($atts) {

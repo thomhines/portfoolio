@@ -1,8 +1,8 @@
-=== Portfoolio ===
+=== Portfoolio Media Gallery ===
 Contributors: Thom Hines
-Tags: gallery, portfolio, slideshow, media, video, image, custom, custom post type, vimeo, youtube, soundcloud, upload
+Tags: gallery, portfolio, slideshow, multimedia, media, video, image, custom, vimeo, youtube, soundcloud, upload
 Requires at least: 3.5.0
-Tested up to: 3.6.0
+Tested up to: 3.6.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,6 +29,8 @@ Easily add galleries and slideshows to your site, with drag and drop ordering, a
 
 = Developer Features =
 
+*Check out the Installation tab to see more detailed documentation on how to implement Portfoolio on your site.*
+
 * Works with standard standard WordPress conventions. Functions use robust arrays as arguments to give developers control over queries and settings, galleries will automatically detect which category the user is viewing, they accept all the same parameters as WP_Query objects, etc.
 
 * Portfoolio "Works" are build as a standard custom post type, which means that they can be sorted and controlled like any other WordPress content, including adding custom meta data, featured thumbnails, categories and tags, archives, and more.
@@ -53,7 +55,7 @@ Easily add galleries and slideshows to your site, with drag and drop ordering, a
 
 = Usage = 
 
-*Displaying a Gallery*
+**Displaying a Gallery**
 
 To add a gallery to a template file in your theme, just add this code:
 
@@ -82,7 +84,7 @@ In order to adjust it's appearance or which Works it will load, simply add any o
 
 
 
-*Displaying a Item's Slideshow*
+**Displaying a Item's Slideshow**
 
 `<?php portfoolio_slideshow(); ?>`
 
@@ -114,13 +116,22 @@ The only required attribute of the shortcode is the 'work' attribute, which must
 
 == Frequently Asked Questions ==
 
-= How do I add more than one image to a Work? =
-Just do the same thing you did to add the first one. If you have more than one image, you can drag and drop the images into whatever order you want!
+= Can I add more than one image or video to a specific Work? =
+
+If your work is part of a series or if you want to show several images in a slideshow, just add more images to the Media List in the admin page for that Work. If you have more than one image, you can drag and drop the images in the Media List into whatever order you want them to appear on the site, and Portfoolio will automatically create a slideshow turn those images into a slideshow.
+
 
 = How can I choose which thumbnail to use in my site's gallery for a particular work? =
 
-Use the 'Featured Image' box in the right column to choose which image you want to be that Work's thumbnail. The image can be any item in your media library, or even something you upload from your computer.
+You can either 'Use as Thumbnail' button next to each item in the Media List or the 'Featured Image' box on the right-hand side of the admin page to choose which image you want to be that Work's thumbnail. The image can be any item in your media library, or even something you upload from your computer. If no image is chosen, Portfoolio will use the first image in the Media List, and if there are no images, it will use the first video thumbnail.
 
+
+= How can I change the order of the images in my gallery? =
+The easiest way to change the order is by adjusting the 'Gallery Item Order' option in Settings > Portfoolio. You can choose between three options: List Order, Date, and Random. If you select List Order, your images will appear in the order they are in the Works list (Gallery) page. In general, this will be the same order as Date, but you can alter the order of posts manually or (even easier) by using a plugin like Intuitive Custom Post Order, which allows you to the the order of posts by dragging and dropping. NOTE: I hope to include this functionality in a future version of Portfoolio.
+
+
+= Can I customize how the gallery or slideshow looks or functions? =
+Absolutely. To change which images the gallery shows or how the slideshow functions, you can add a few parameters to either the template or the shortcode to control their base settings (See the Installation page for more information). If you are just wanting to adjust the how they appear on the screen, simply add new CSS rules to your theme that target the elements you want to affect. All of Portfoolio's CSS rules are simple, easy to work with, and standards-based.
 
 
 
